@@ -108,9 +108,7 @@ namespace Flies
 			IteratorBase(ViewType& view, size_type index);
 
 			auto operator*() const;
-
 			IteratorBase& operator++();
-
 			IteratorBase operator++(int);
 
 			bool operator==(const IteratorBase& other) const { return m_Index == other.m_Index; }
@@ -128,23 +126,21 @@ namespace Flies
 
 	public:
 		View(World& world);
-
 		~View() = default;
-
-		Iterator      begin() { return Iterator(*this, 0); }
-		ConstIterator begin()  const { return ConstIterator(*this, 0); }
-		ConstIterator cbegin() const { return begin(); }
-
-		Iterator      end() { return Iterator(*this, EndIndex()); }
-		ConstIterator end()    const { return ConstIterator(*this, EndIndex()); }
-		ConstIterator cend()   const { return end(); }
-
+		
 		template<typename Func>
 		void ForEach(Func&& func);
 
+		Iterator begin() { return Iterator(*this, 0); }
+		ConstIterator begin()  const { return ConstIterator(*this, 0); }
+		ConstIterator cbegin() const { return begin(); }
+
+		Iterator end() { return Iterator(*this, EndIndex()); }
+		ConstIterator end()    const { return ConstIterator(*this, EndIndex()); }
+		ConstIterator cend()   const { return end(); }
+
 	private:
 		size_type EndIndex() const;
-
 		bool HasAll(EntityID id) const;
 
 		template<typename... ValueTypes>

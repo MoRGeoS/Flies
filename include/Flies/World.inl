@@ -19,6 +19,7 @@ namespace Flies
 		storage->Insert(entity.id, component);
 		return storage->Get(entity.id);
 	}
+
 	template<typename T>
 	inline T* Flies::World::InsertComponent(Entity entity, T&& component)
 	{
@@ -33,6 +34,7 @@ namespace Flies
 		storage->Insert(entity.id, std::move(component));
 		return storage->Get(entity.id);
 	}
+
 	template<typename T, typename ...Args>
 	inline T* World::EmplaceComponent(Entity entity, Args && ...args)
 	{
@@ -47,6 +49,7 @@ namespace Flies
 		storage->Emplace(entity.id, std::forward<Args>(args)...);
 		return storage->Get(entity.id);
 	}
+
 	template<typename ...Types>
 	inline void World::RemoveComponents(Entity entity)
 	{
@@ -61,8 +64,9 @@ namespace Flies
 			}
 		};
 
-		(remove.template operator() < Types > (), ...);
+		(remove.template operator()<Types>(), ...);
 	}
+
 	template<typename ...Types>
 	inline bool World::HasComponents(Entity entity)
 	{
@@ -80,6 +84,7 @@ namespace Flies
 
 		return (has.template operator() < Types > (entity.id) && ...);
 	}
+
 	template<typename T>
 	inline T* World::GetComponent(Entity entity)
 	{
@@ -90,6 +95,7 @@ namespace Flies
 
 		return storage->Get(entity.id);
 	}
+
 	template<typename T>
 	inline const T* World::GetComponent(Entity entity) const
 	{
@@ -100,16 +106,19 @@ namespace Flies
 
 		return storage->Get(entity.id);
 	}
+
 	template<typename ...Types>
 	inline View<Types...> World::CreateView()
 	{
 		return View<Types...>(*this);
 	}
+
 	template<typename ...Types>
 	inline const View<Types...> World::CreateView() const
 	{
 		return View<Types...>(*this);
 	}
+
 	template<typename T>
 	inline void World::CreateStorage()
 	{
@@ -130,6 +139,7 @@ namespace Flies
 		entry.Entities = [storage]() { return storage->Entities(); };
 		entry.Size = [storage]() { return storage->Size(); };
 	}
+
 	template<typename T>
 	inline void World::DestroyStorage()
 	{
@@ -140,6 +150,7 @@ namespace Flies
 		delete entry.Storage;
 		entry.Storage = nullptr;
 	}
+
 	template<typename T>
 	inline bool World::HasStorage() const
 	{
@@ -149,6 +160,7 @@ namespace Flies
 			m_Storages[index].Storage != nullptr
 			);
 	}
+
 	template<typename T>
 	inline ComponentStorage<T>* World::GetStorage()
 	{
@@ -159,6 +171,7 @@ namespace Flies
 		}
 		return nullptr;
 	}
+
 	template<typename T>
 	inline const ComponentStorage<T>* World::GetStorage() const
 	{
@@ -232,7 +245,7 @@ namespace Flies
 			return m_World->GetStorage<T>();
 		};
 
-		m_Storages = std::make_tuple(getStorage.template operator() < Types > ()...);
+		m_Storages = std::make_tuple(getStorage.template operator()<Types>()...);
 
 		auto consider = [&]<typename T>()
 		{
@@ -246,7 +259,7 @@ namespace Flies
 				m_SmallestStorage = &entry;
 		};
 
-		(consider.template operator() < Types > (), ...);
+		(consider.template operator()<Types>(), ...);
 	}
 
 	template<typename ...Types>
@@ -275,7 +288,7 @@ namespace Flies
 			return storage && storage->Contains(id);
 		};
 
-		return (contains.template operator() < Types > () && ...);
+		return (contains.template operator()<Types>() && ...);
 	}
 
 	template<typename ...Types>
