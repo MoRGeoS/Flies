@@ -1,0 +1,29 @@
+cmake_minimum_required(VERSION 3.30)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+project(Flies LANGUAGES CXX)
+
+file(GLOB_RECURSE SOURCE_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*
+)
+
+file(GLOB_RECURSE HEADER_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/*
+)
+
+add_library(${PROJECT_NAME}
+    STATIC
+    ${SOURCE_FILES} ${HEADER_FILES}
+)
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+source_group(
+    TREE ${CMAKE_CURRENT_SOURCE_DIR}
+    FILES ${SOURCE_FILES} ${HEADER_FILES}
+)
