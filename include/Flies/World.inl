@@ -134,6 +134,7 @@ namespace Flies
 		ComponentStorage<T>* storage = new ComponentStorage<T>();
 		StorageEntry& entry = m_Storages[index];
 		entry.Storage = storage;
+		entry.Deleter = [storage]() { delete reinterpret_cast<ComponentStorage<T>>(storage); storage = nullptr; };
 		entry.Remove = [storage](EntityID id) { storage->Remove(id); };
 		entry.Contains = [storage](EntityID id) { return storage->Contains(id); };
 		entry.Entities = [storage]() { return storage->Entities(); };
@@ -147,8 +148,7 @@ namespace Flies
 
 		size_type index = TypeID<T>().seq();
 		StorageEntry& entry = m_Storages[index];
-		delete entry.Storage;
-		entry.Storage = nullptr;
+		entry.Deleter();
 	}
 
 	template<typename T>

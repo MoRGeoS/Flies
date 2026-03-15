@@ -53,11 +53,11 @@ namespace Flies
 		using Dense = EntityID;
 		using Storage = T;
 
-		template<typename T>
-		using Alloc = std::allocator<T>;
+		template<typename Type>
+		using Alloc = std::allocator<Type>;
 
-		template<typename T>
-		using Traits = std::allocator_traits<Alloc<T>>;
+		template<typename Type>
+		using Traits = std::allocator_traits<Alloc<Type>>;
 
 		void Grow();
 		void Cleanup();

@@ -83,6 +83,7 @@ namespace Flies
 		{
 			void* Storage = nullptr;
 
+			std::function<void()> Deleter;
 			std::function<void(EntityID)> Remove;
 			std::function<bool(EntityID)> Contains;
 			std::function<std::span<const EntityID>()> Entities;

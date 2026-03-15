@@ -36,8 +36,7 @@ namespace Flies
 	{
 		for (auto& entry : m_Storages)
 		{
-			delete entry.Storage;
-			entry.Storage = nullptr;
+			entry.Deleter();
 		}
 	}
 }
