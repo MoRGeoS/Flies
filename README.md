@@ -2,6 +2,12 @@
 An easy ECS library written in C++.  
 This project is based on a sparse set and doesn't use archetypes.  
 
+## Content
+- [What's new?](#whats-new)
+- [Requirements](#requirements)
+- [Download](#download)
+- [Example](#example)
+
 ## What's new?
 - Cross-platform added (Untested)
 
