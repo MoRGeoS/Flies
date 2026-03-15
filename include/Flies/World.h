@@ -181,8 +181,6 @@ namespace Flies
 		Iterator cend() const { return end(); }
 
 	private:
-		using safe_types = std::remove_cvref_t<Types>;
-
 		size_type EndIndex() const;
 		bool HasAll(EntityID id) const;
 
@@ -190,7 +188,7 @@ namespace Flies
 
 	private:
 		World* m_World = nullptr;
-		std::tuple<ComponentStorage<safe_types>*...> m_Storages = {};
+		std::tuple<ComponentStorage<std::remove_cvref_t<Types>>*...> m_Storages = {};
 		World::StorageEntry* m_SmallestStorage = nullptr;
 	};
 }

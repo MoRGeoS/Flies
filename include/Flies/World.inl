@@ -290,9 +290,9 @@ namespace Flies
 	inline View<Types...>::View(World& world)
 		: m_World(&world)
 	{
-		auto getStorage = [&]<typename T>() -> ComponentStorage<T>*
+		auto getStorage = [&]<typename T>() -> ComponentStorage<std::remove_cvref_t<T>>*
 		{
-			return m_World->GetStorage<T>();
+			return m_World->GetStorage<std::remove_cvref_t<T>>();
 		};
 
 		m_Storages = std::make_tuple(getStorage.template operator()<Types>()...);
@@ -334,19 +334,19 @@ namespace Flies
 		}
 	}
 
-	template<typename ...Types>
+	template<typename... Types>
 	inline size_type View<Types...>::EndIndex() const
 	{
 		if (!m_SmallestStorage) return 0;
 		return static_cast<size_type>(m_SmallestStorage->Entities().size());
 	}
 
-	template<typename ...Types>
+	template<typename... Types>
 	inline bool View<Types...>::HasAll(EntityID id) const
 	{
 		auto contains = [&]<typename T>() -> bool
 		{
-			ComponentStorage<T>* storage = m_World->GetStorage<T>();
+			ComponentStorage<std::remove_cvref_t<T>>* storage = m_World->GetStorage<std::remove_cvref_t<T>>();
 			return storage && storage->Contains(id);
 		};
 
