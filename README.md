@@ -2,10 +2,12 @@
 An easy ECS library written in C++.  
 This project is based on a sparse set and doesn't use archetypes.  
 
+## What's new?
+- Cross-platform added (Untested)
+
 ## Requirements
-- Windows only *(cross-platform support in progress)*
-- MSVC compiler
 - CMake 3.19
+- C++ 20
 
 ## Download
 You'll need Git installed first.  
