@@ -4,6 +4,7 @@
 #include <span>
 #include <tuple>
 #include <functional>
+#include <type_traits>
 
 #include <Flies/EntityPool.h>
 #include <Flies/ComponentStorage.h>
@@ -97,58 +98,99 @@ namespace Flies
 	class View
 	{
 	public:
-		template<typename ViewType, typename... ValueTypes>
-		class IteratorBase
+		class Iterator
 		{
 		public:
-			using value_type = std::tuple<ValueTypes&...>;
 			using difference_type = std::ptrdiff_t;
 			using iterator_category = std::forward_iterator_tag;
 
-			IteratorBase(ViewType& view, size_type index);
+			Iterator(View& view, size_type index);
 
-			auto operator*() const;
-			IteratorBase& operator++();
-			IteratorBase operator++(int);
+			EntityID operator*() const;
+			Iterator& operator++();
+			Iterator operator++(int);
 
-			bool operator==(const IteratorBase& other) const { return m_Index == other.m_Index; }
-			bool operator!=(const IteratorBase& other) const { return !(*this == other); }
+			bool operator==(const Iterator& other) const { return m_Index == other.m_Index; }
+			bool operator!=(const Iterator& other) const { return !(*this == other); }
 
 		private:
 			void SkipInvalid();
 
-			ViewType* m_View = nullptr;
-			size_type   m_Index = 0;
+		private:
+			View* m_View = nullptr;
+			size_type m_Index = 0;
 		};
 
-		using Iterator = IteratorBase<View, Types...>;
-		using ConstIterator = IteratorBase<const View, const Types...>;
+		template<typename ViewType, typename... ValueTypes>
+		class ForEachIteratorBase
+		{
+		public:
+			using value_type = std::tuple<EntityID, ValueTypes&...>;
+			using difference_type = std::ptrdiff_t;
+			using iterator_category = std::forward_iterator_tag;
+
+			ForEachIteratorBase(ViewType& view, size_type index = 0);
+
+			value_type operator*() const;
+			ForEachIteratorBase& operator++();
+			ForEachIteratorBase operator++(int);
+
+			bool operator==(const ForEachIteratorBase& other) const { return m_Index == other.m_Index; }
+			bool operator!=(const ForEachIteratorBase& other) const { return !(*this == other); }
+
+		private:
+			void SkipInvalid();
+
+		private:
+			ViewType* m_View = nullptr;
+			size_type m_Index = 0;
+		};
+
+		struct ForEachView
+		{
+			View& view;
+
+			ForEachIteratorBase<View, Types...> begin() { return ForEachIteratorBase<View, Types...>{ view }; }
+			ForEachIteratorBase<const View, const Types...> begin() const { return ForEachIteratorBase<View, Types...>{ view }; }
+			ForEachIteratorBase<const View, const Types...> cbegin() const { return begin(); }
+
+			ForEachIteratorBase<View, Types...> end() { return ForEachIteratorBase<View, Types...>{ view, view.EndIndex() }; }
+			ForEachIteratorBase<const View, const Types...> end() const { return ForEachIteratorBase<View, Types...>{ view, view.EndIndex() }; }
+			ForEachIteratorBase<const View, const Types...> cend() const { return end(); }
+		};
 
 	public:
 		View(World& world);
 		~View() = default;
 		
+		ForEachView ForEach() { return ForEachView{ *this }; }
+		const ForEachView ForEach() const { return ForEachView{ *this }; }
+
 		template<typename Func>
 		void ForEach(Func&& func);
 
+		template<typename Func>
+		void ForEach(Func&& func) const;
+
 		Iterator begin() { return Iterator(*this, 0); }
-		ConstIterator begin()  const { return ConstIterator(*this, 0); }
-		ConstIterator cbegin() const { return begin(); }
+		Iterator begin() const { return Iterator(*this, 0); }
+		Iterator cbegin() const { return begin(); }
 
 		Iterator end() { return Iterator(*this, EndIndex()); }
-		ConstIterator end()    const { return ConstIterator(*this, EndIndex()); }
-		ConstIterator cend()   const { return end(); }
+		Iterator end() const { return Iterator(*this, EndIndex()); }
+		Iterator cend() const { return end(); }
 
 	private:
+		using safe_types = std::remove_cvref_t<Types>;
+
 		size_type EndIndex() const;
 		bool HasAll(EntityID id) const;
 
-		template<typename... ValueTypes>
-		std::tuple<ValueTypes&...> GetComponents(EntityID id) const;
+		std::tuple<Types&...> GetComponents(EntityID id) const;
 
 	private:
 		World* m_World = nullptr;
-		std::tuple<ComponentStorage<Types>*...> m_Storages = {};
+		std::tuple<ComponentStorage<safe_types>*...> m_Storages = {};
 		World::StorageEntry* m_SmallestStorage = nullptr;
 	};
 }

@@ -185,10 +185,58 @@ namespace Flies
 #pragma endregion
 
 #pragma region View
-#pragma region View::Iterator
+#	pragma region View::Iterator
+	template<typename... Types>
+	inline View<Types...>::Iterator::Iterator(View& view, size_type index)
+		: m_View(&view)
+		, m_Index(index)
+	{
+		SkipInvalid();
+	}
+
+	template<typename... Types>
+	inline EntityID View<Types...>::Iterator::operator*() const
+	{
+		return m_View->m_SmallestStorage->Entities()[m_Index];
+	}
+
+	template<typename... Types>
+	inline View<Types...>::Iterator& View<Types...>::Iterator::operator++()
+	{
+		++m_Index;
+		SkipInvalid();
+		return *this;
+	}
+
+	template<typename... Types>
+	inline View<Types...>::Iterator View<Types...>::Iterator::operator++(int)
+	{
+		Iterator tmp = *this;
+		++(*this);
+		return tmp;
+	}
+
+	template<typename... Types>
+	inline void View<Types...>::Iterator::SkipInvalid()
+	{
+		if (!m_View->m_SmallestStorage) return;
+
+		std::span<const EntityID> entities = m_View->m_SmallestStorage->Entities();
+		while (m_Index < entities.size())
+		{
+			if (m_View->HasAll(entities[m_Index]))
+			{
+				break;
+			}
+			m_Index++;
+		}
+	}
+#	pragma endregion
+
+#	pragma region View::ForEachIteratorBase
 	template<typename... Types>
 	template<typename ViewType, typename... ValueTypes>
-	inline View<Types...>::IteratorBase<ViewType, ValueTypes...>::IteratorBase(ViewType& view, size_type index)
+	inline View<Types...>::ForEachIteratorBase<ViewType, ValueTypes...>::ForEachIteratorBase(ViewType& view, size_type index)
 		: m_View(&view)
 		, m_Index(index)
 	{
@@ -197,15 +245,15 @@ namespace Flies
 
 	template<typename... Types>
 	template<typename ViewType, typename... ValueTypes>
-	inline auto View<Types...>::template IteratorBase<ViewType, ValueTypes...>::operator*() const
+	inline View<Types...>::ForEachIteratorBase<ViewType, ValueTypes...>::value_type View<Types...>::ForEachIteratorBase<ViewType, ValueTypes...>::operator*() const
 	{
 		EntityID id = m_View->m_SmallestStorage->Entities()[m_Index];
-		return m_View->template GetComponents<ValueTypes...>(id);
+		return std::tuple_cat(std::make_tuple(id), m_View->GetComponents(id));
 	}
 
 	template<typename... Types>
 	template<typename ViewType, typename... ValueTypes>
-	inline View<Types...>::IteratorBase<ViewType, ValueTypes...>& View<Types...>::template IteratorBase<ViewType, ValueTypes...>::operator++()
+	inline View<Types...>::ForEachIteratorBase<ViewType, ValueTypes...>& View<Types...>::ForEachIteratorBase<ViewType, ValueTypes...>::operator++()
 	{
 		++m_Index;
 		SkipInvalid();
@@ -214,28 +262,30 @@ namespace Flies
 
 	template<typename... Types>
 	template<typename ViewType, typename... ValueTypes>
-	inline View<Types...>::IteratorBase<ViewType, ValueTypes...> View<Types...>::template IteratorBase<ViewType, ValueTypes...>::operator++(int)
+	inline View<Types...>::ForEachIteratorBase<ViewType, ValueTypes...> View<Types...>::ForEachIteratorBase<ViewType, ValueTypes...>::operator++(int)
 	{
-		IteratorBase tmp = *this;
+		ForEachIteratorBase tmp = *this;
 		++(*this);
 		return tmp;
 	}
 
 	template<typename... Types>
 	template<typename ViewType, typename... ValueTypes>
-	inline void View<Types...>::template IteratorBase<ViewType, ValueTypes...>::SkipInvalid()
+	inline void View<Types...>::ForEachIteratorBase<ViewType, ValueTypes...>::SkipInvalid()
 	{
 		if (!m_View->m_SmallestStorage) return;
 
-		auto entities = m_View->m_SmallestStorage->Entities();
+		std::span<const EntityID> entities = m_View->m_SmallestStorage->Entities();
 		while (m_Index < entities.size())
 		{
-			if (m_View->HasAll(entities[m_Index])) break;
-			++m_Index;
+			if (m_View->HasAll(entities[m_Index]))
+			{
+				break;
+			}
+			m_Index++;
 		}
 	}
-#pragma endregion
-
+#	pragma endregion
 	template<typename... Types>
 	inline View<Types...>::View(World& world)
 		: m_World(&world)
@@ -262,11 +312,23 @@ namespace Flies
 		(consider.template operator()<Types>(), ...);
 	}
 
-	template<typename ...Types>
+	template<typename... Types>
 	template<typename Func>
 	inline void View<Types...>::ForEach(Func&& func)
 	{
-		for (auto&& components : *this)
+		ForEachView view = ForEach();
+		for (auto&& components : view)
+		{
+			std::apply(std::forward<Func>(func), components);
+		}
+	}
+
+	template<typename... Types>
+	template<typename Func>
+	inline void View<Types...>::ForEach(Func&& func) const
+	{
+		const ForEachView view = ForEach();
+		for (auto&& components : view)
 		{
 			std::apply(std::forward<Func>(func), components);
 		}
@@ -291,11 +353,10 @@ namespace Flies
 		return (contains.template operator()<Types>() && ...);
 	}
 
-	template<typename ...Types>
-	template<typename ...ValueTypes>
-	inline std::tuple<ValueTypes&...> View<Types...>::GetComponents(EntityID id) const
+	template<typename... Types>
+	inline std::tuple<Types&...> View<Types...>::GetComponents(EntityID id) const
 	{
-		return std::apply([&](auto*... storage) -> std::tuple<ValueTypes&...>
+		return std::apply([&](auto*... storage) -> std::tuple<Types&...>
 			{
 				return { *storage->Get(id)... };
 			}, m_Storages);
