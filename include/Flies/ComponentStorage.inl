@@ -281,6 +281,7 @@ namespace Flies
 	{
 		if (m_Capacity > 0)
 		{
+			FLS_ASSERT(m_Storage && m_Dense)
 			Traits<Dense>::deallocate(m_DenseAlloc, m_Dense, m_Capacity);
 
 			for (auto it = m_Storage; it != m_Storage + m_Size; it++)

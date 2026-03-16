@@ -134,7 +134,15 @@ namespace Flies
 		ComponentStorage<T>* storage = new ComponentStorage<T>();
 		StorageEntry& entry = m_Storages[index];
 		entry.Storage = storage;
-		entry.Deleter = [storage]() { delete reinterpret_cast<ComponentStorage<T>>(storage); storage = nullptr; };
+		entry.Deleter = [this, index]()
+			{
+				if (m_Storages[index].Storage) 
+				{
+					delete reinterpret_cast<ComponentStorage<T>*>(m_Storages[index].Storage);
+					m_Storages[index].Storage = nullptr;
+				}
+			};
+
 		entry.Remove = [storage](EntityID id) { storage->Remove(id); };
 		entry.Contains = [storage](EntityID id) { return storage->Contains(id); };
 		entry.Entities = [storage]() { return storage->Entities(); };

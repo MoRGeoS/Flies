@@ -58,9 +58,9 @@ namespace Flies
 		template<typename... Types>
 		const View<Types...> CreateView() const;
 
-	private:
 		void Cleanup();
 
+	private:
 		template<typename T>
 		void CreateStorage();
 
