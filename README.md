@@ -1,5 +1,5 @@
 # Flies
-An easy ECS library written in C++.  
+A simple ECS library written in C++.  
 This project is based on a sparse set and doesn't use archetypes.  
 
 ## Content
