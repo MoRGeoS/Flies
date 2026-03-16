@@ -46,6 +46,7 @@ namespace Flies
 		const ID* cend() const { return m_Sparse + m_Capacity; }
 
 		size_type Size() const { return m_Capacity; }
+		void Cleanup();
 
 	private:
 		using Sparse = Index;
@@ -54,7 +55,6 @@ namespace Flies
 		using Traits = std::allocator_traits<Alloc>;
 
 		void Grow(size_type desiredCapacity);
-		void Cleanup();
 
 	private:
 		Sparse* m_Sparse = nullptr;
