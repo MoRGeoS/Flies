@@ -14,9 +14,18 @@ namespace Flies
 			return nullptr;
 		}
 
+		// Insert
 		CreateStorage<T>();
 		ComponentStorage<T>* storage = GetStorage<T>();
 		storage->Insert(entity.id, component);
+
+		// Call OnInsert callback
+		size_type index = TypeID<T>().seq();
+		for (auto& cb : m_Storages[index].OnInsert)
+		{
+			cb(entity);
+		}
+
 		return storage->Get(entity.id);
 	}
 
@@ -29,9 +38,18 @@ namespace Flies
 			return nullptr;
 		}
 
+		// Insert
 		CreateStorage<T>();
 		ComponentStorage<T>* storage = GetStorage<T>();
 		storage->Insert(entity.id, std::move(component));
+
+		// Call OnInsert callback
+		size_type index = TypeID<T>().seq();
+		for (auto& cb : m_Storages[index].OnInsert)
+		{
+			cb(entity);
+		}
+
 		return storage->Get(entity.id);
 	}
 
@@ -44,30 +62,48 @@ namespace Flies
 			return nullptr;
 		}
 
+		// Emplace
 		CreateStorage<T>();
 		ComponentStorage<T>* storage = GetStorage<T>();
 		storage->Emplace(entity.id, std::forward<Args>(args)...);
+
+		// Call OnInsert callback
+		size_type index = TypeID<T>().seq();
+		for (auto& cb : m_Storages[index].OnInsert)
+		{
+			cb(entity);
+		}
+
 		return storage->Get(entity.id);
 	}
 
-	template<typename ...Types>
+	template<typename... Types>
 	inline void World::RemoveComponents(Entity entity)
 	{
 		if (!IsAlive(entity)) return;
 
 		auto remove = [&]<typename T>()
 		{
-			ComponentStorage<T>* storage = GetStorage<T>();
-			if (storage)
+			size_type index = TypeID<T>().seq();
+			if (m_Storages.size() <= index) return;
+
+			// Call OnRemove callback
+			for (auto& cb : m_Storages[index].OnRemove)
 			{
-				storage->Remove(entity.id);
+				cb(entity);
+			}
+
+			// Remove
+			if (m_Storages[index].Storage)
+			{
+				m_Storages[index].Remove(entity.id);
 			}
 		};
 
 		(remove.template operator()<Types>(), ...);
 	}
 
-	template<typename ...Types>
+	template<typename... Types>
 	inline bool World::HasComponents(Entity entity)
 	{
 		if (!IsAlive(entity)) return false;
@@ -117,6 +153,30 @@ namespace Flies
 	inline const View<Types...> World::CreateView() const
 	{
 		return View<Types...>(*this);
+	}
+
+	template<typename T>
+	inline void World::OnInsert(std::function<void(World&, Entity)> fn)
+	{
+		size_type index = TypeID<T>().seq();
+		if (m_Storages.size() <= index)
+		{
+			m_Storages.resize(index + 1);
+		}
+
+		m_Storages[index].OnInsert.push_back(fn);
+	}
+
+	template<typename T>
+	inline void World::OnRemove(std::function<void(World&, Entity)> fn)
+	{
+		size_type index = TypeID<T>().seq();
+		if (m_Storages.size() <= index)
+		{
+			m_Storages.resize(index + 1);
+		}
+
+		m_Storages[index].OnRemove.push_back(fn);
 	}
 
 	template<typename T>

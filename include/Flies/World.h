@@ -26,6 +26,8 @@ namespace Flies
 		World() = default;
 		~World();
 
+		void Cleanup();
+
 		Entity CreateEntity();
 		void DestroyEntity(Entity entity);
 
@@ -58,7 +60,11 @@ namespace Flies
 		template<typename... Types>
 		const View<Types...> CreateView() const;
 
-		void Cleanup();
+		template<typename T>
+		void OnInsert(std::function<void(World&, Entity)> fn);
+
+		template<typename T>
+		void OnRemove(std::function<void(World&, Entity)> fn);
 
 	private:
 		template<typename T>
@@ -88,6 +94,9 @@ namespace Flies
 			std::function<bool(EntityID)> Contains;
 			std::function<std::span<const EntityID>()> Entities;
 			std::function<size_type()> Size;
+
+			std::vector<std::function<void(World&, Entity)>> OnInsert;
+			std::vector<std::function<void(World&, Entity)>> OnRemove;
 		};
 		std::vector<StorageEntry> m_Storages;
 
