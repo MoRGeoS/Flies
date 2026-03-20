@@ -23,7 +23,7 @@ namespace Flies
 		size_type index = TypeID<T>().seq();
 		for (auto& cb : m_Storages[index].OnInsert)
 		{
-			cb(entity);
+			cb(*this, entity);
 		}
 
 		return storage->Get(entity.id);
@@ -47,7 +47,7 @@ namespace Flies
 		size_type index = TypeID<T>().seq();
 		for (auto& cb : m_Storages[index].OnInsert)
 		{
-			cb(entity);
+			cb(*this, entity);
 		}
 
 		return storage->Get(entity.id);
@@ -71,7 +71,7 @@ namespace Flies
 		size_type index = TypeID<T>().seq();
 		for (auto& cb : m_Storages[index].OnInsert)
 		{
-			cb(entity);
+			cb(*this, entity);
 		}
 
 		return storage->Get(entity.id);
@@ -90,7 +90,7 @@ namespace Flies
 			// Call OnRemove callback
 			for (auto& cb : m_Storages[index].OnRemove)
 			{
-				cb(entity);
+				cb(*this, entity);
 			}
 
 			// Remove
@@ -118,7 +118,7 @@ namespace Flies
 			return false;
 		};
 
-		return (has.template operator() < Types > (entity.id) && ...);
+		return (has.template operator()<Types>(entity.id) && ...);
 	}
 
 	template<typename T>
