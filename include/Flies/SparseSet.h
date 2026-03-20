@@ -5,14 +5,15 @@
 #include <memory>
 
 #include <Flies/Common/Types.h>
+#include <Flies/Entity.h>
 
 namespace Flies
 {
 	class SparseSet
 	{
 	public:
-		using ID = uint32_t;
-		using Index = uint32_t;
+		using ID = EntityID;
+		using Index = size_type;
 
 		static constexpr Index NULL_INDEX = std::numeric_limits<Index>::max();
 

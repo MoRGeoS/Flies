@@ -12,7 +12,7 @@
 namespace Flies
 {
 	template<typename T>
-	requires std::movable<T>&& std::copyable<T>
+		requires std::movable<T>&& std::copyable<T>
 	class ComponentStorage
 	{
 	public:
@@ -32,7 +32,7 @@ namespace Flies
 		T& Insert(EntityID id, T&& component);
 
 		template<typename... Args>
-		requires std::constructible_from<T, Args...>
+			requires std::constructible_from<T, Args...>
 		T& Emplace(EntityID id, Args&&... args);
 
 		void Remove(EntityID id);
