@@ -42,6 +42,9 @@ namespace Flies
 		T* Get(EntityID id);
 		const T* Get(EntityID id) const;
 
+		T* GetUnchecked(EntityID id) { return m_Storage + m_SparseSet[id]; }
+		const T* GetUnchecked(EntityID id) const { return m_Storage + m_SparseSet[id]; }
+
 		std::span<const EntityID> Entities() const { return { m_Dense, m_Size }; }
 
 		std::span<T> Components() { return { m_Storage, m_Size }; }
