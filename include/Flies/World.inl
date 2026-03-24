@@ -412,13 +412,10 @@ namespace Flies
 	template<typename... Types>
 	inline bool View<Types...>::HasAll(EntityID id) const
 	{
-		auto contains = [&]<typename T>() -> bool
-		{
-			ComponentStorage<std::remove_cvref_t<T>>* storage = m_World->GetStorage<std::remove_cvref_t<T>>();
-			return storage && storage->Contains(id);
-		};
-
-		return (contains.template operator()<Types>() && ...);
+		return std::apply([&](auto*... storage) -> bool
+			{
+				return (... && (storage && storage->Contains(id)));
+			}, m_Storages);
 	}
 
 	template<typename... Types>
@@ -426,7 +423,7 @@ namespace Flies
 	{
 		return std::apply([&](auto*... storage) -> std::tuple<Types&...>
 			{
-				return { *storage->Get(id)... };
+				return { *storage->GetUnchecked(id)... };
 			}, m_Storages);
 	}
 #pragma endregion
