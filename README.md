@@ -63,9 +63,9 @@ int main()
 
 void ProcessPhysics(Flies::World& world, float dt)
 {
-	auto view = world.CreateView<Position, const Velocity>();
+	auto view = world.GetForEachView<Position, const Velocity>();
 
-	for (auto [pos, vel] : view.ForEach())
+	for (auto [pos, vel] : view)
 	{
 		pos.x += vel.dx * dt;
 		pos.y += vel.dy * dt;
