@@ -2,9 +2,7 @@
 
 #include "Macros.h"
 
-// If positive debug level
-#if FLS_DEBUG_LEVEL >= 0
-
+#if _DEBUG
 #	include <format>
 #	include <iostream>
 

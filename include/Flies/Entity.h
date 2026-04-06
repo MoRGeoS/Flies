@@ -22,6 +22,4 @@ namespace Flies
 			return !(*this == other);
 		}
 	};
-
-	using Fly = Entity;
 }

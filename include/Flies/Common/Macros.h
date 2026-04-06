@@ -1,17 +1,6 @@
 #pragma once
 
-// No-debug: level = -1
-// Undefined debug: level = 0
-// Defined debug: level = 1
-
-#ifdef NDEBUG
-#	define FLS_DEBUG_LEVEL -1
-#elif !defined(_DEBUG)
-#	define FLS_DEBUG_LEVEL 0
-#else
-#	define FLS_DEBUG_LEVEL 1
-#endif
-
+// FLS_DEBUG_BREAK
 #if defined(_MSC_VER)
 #	define FLS_DEBUG_BREAK() __debugbreak()
 #elif defined(__clang__)
