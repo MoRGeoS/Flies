@@ -9,7 +9,7 @@ This project is based on a sparse set and doesn't use archetypes.
 - [Example](#example)
 
 ## What's new?
-- Cross-platform added (Untested)
+- Refactor
 
 ## Requirements
 - CMake 3.19
