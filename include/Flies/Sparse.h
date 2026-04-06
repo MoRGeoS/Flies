@@ -1,11 +1,11 @@
 #pragma once
 
+#include "Common/Types.h"
+#include "Entity.h"
+#include "Span.h"
+
 #include <limits>
 #include <memory>
-
-#include <Flies/Common/Types.h>
-#include <Flies/Entity.h>
-#include <Flies/Span.h>
 
 namespace Flies
 {

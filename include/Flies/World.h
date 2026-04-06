@@ -1,16 +1,16 @@
 #pragma once
 
-#include <vector>
-#include <span>
-#include <tuple>
-#include <functional>
-#include <type_traits>
-
 #include "Common/Types.h"
 
 #include "EntityPool.h"
 #include "ComponentStorage.h"
 #include "TypeInfo.h"
+
+#include <vector>
+#include <span>
+#include <tuple>
+#include <functional>
+#include <type_traits>
 
 namespace Flies
 {

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Flies/Common/Types.h"
+#include "Common/Types.h"
 #include "Entity.h"
-#include "Flies/Sparse.h"
+#include "Sparse.h"
 
 #include <memory>
 #include <concepts>
