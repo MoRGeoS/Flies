@@ -1,18 +1,20 @@
 #pragma once
 
+#include "Flies/Common/Types.h"
+#include "Entity.h"
+#include "Flies/Sparse.h"
+
 #include <memory>
 #include <concepts>
-#include <span>
-
-#include <Flies/Common/Types.h>
-
-#include <Flies/Entity.h>
-#include <Flies/SparseSet.h>
 
 namespace Flies
 {
 	template<typename T>
+<<<<<<< Updated upstream
 	requires std::movable<T>&& std::copyable<T>
+=======
+	requires (std::movable<T> && std::copyable<T>)
+>>>>>>> Stashed changes
 	class ComponentStorage
 	{
 	public:
@@ -26,29 +28,31 @@ namespace Flies
 
 		~ComponentStorage() { Cleanup(); }
 
-		// METHODS
-
 		T& Insert(EntityID id, const T& component);
 		T& Insert(EntityID id, T&& component);
 
 		template<typename... Args>
+<<<<<<< Updated upstream
 		requires std::constructible_from<T, Args...>
+=======
+		requires (std::constructible_from<T, Args...>)
+>>>>>>> Stashed changes
 		T& Emplace(EntityID id, Args&&... args);
 
 		void Remove(EntityID id);
 
-		inline bool Contains(EntityID id) const;
+		bool Contains(EntityID id) const;
 
 		T* Get(EntityID id);
 		const T* Get(EntityID id) const;
 
-		T* GetUnchecked(EntityID id) { return m_Storage + m_SparseSet[id]; }
-		const T* GetUnchecked(EntityID id) const { return m_Storage + m_SparseSet[id]; }
+		T* GetUnsafe(EntityID id) { return m_Storage + m_SparseSet[id]; }
+		const T* GetUnsafe(EntityID id) const { return m_Storage + m_SparseSet[id]; }
 
-		std::span<const EntityID> Entities() const { return { m_Dense, m_Size }; }
+		Flies::Span<const EntityID> Entities() const { return { m_Dense, m_Size }; }
 
-		std::span<T> Components() { return { m_Storage, m_Size }; }
-		std::span<const T> Components() const { return { m_Storage, m_Size }; }
+		Flies::Span<T> Components() { return { m_Storage, m_Size }; }
+		Flies::Span<const T> Components() const { return { m_Storage, m_Size }; }
 
 		size_type Size() const { return m_Size; }
 
@@ -66,7 +70,7 @@ namespace Flies
 		void Cleanup();
 
 	private:
-		SparseSet m_SparseSet;
+		Sparse m_SparseSet;
 
 		Dense* m_Dense = nullptr;
 		Storage* m_Storage = nullptr;
@@ -78,4 +82,4 @@ namespace Flies
 	};
 }
 
-#include <Flies/ComponentStorage.inl>
+#include "ComponentStorage.inl"

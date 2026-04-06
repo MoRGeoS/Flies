@@ -1,12 +1,12 @@
 #pragma once
 
-#include <Flies/Common/Assert.h>
+#include "Common/Assert.h"
 #include "ComponentStorage.h"
 
 namespace Flies
 {
 	template<typename T>
-		requires std::movable<T>&& std::copyable<T>
+	requires (std::movable<T> && std::copyable<T>)
 	inline ComponentStorage<T>::ComponentStorage(const ComponentStorage& other)
 	{
 		m_SparseSet = other.m_SparseSet;
@@ -37,7 +37,7 @@ namespace Flies
 	}
 
 	template<typename T>
-		requires std::movable<T>&& std::copyable<T>
+	requires (std::movable<T> && std::copyable<T>)
 	inline Flies::ComponentStorage<T>::ComponentStorage(ComponentStorage&& other) noexcept
 	{
 		m_SparseSet = std::move(other.m_SparseSet);
@@ -59,7 +59,7 @@ namespace Flies
 	}
 
 	template<typename T>
-		requires std::movable<T>&& std::copyable<T>
+	requires (std::movable<T> && std::copyable<T>)
 	inline ComponentStorage<T>& ComponentStorage<T>::operator=(const ComponentStorage& other)
 	{
 		if (this != &other)
@@ -96,7 +96,7 @@ namespace Flies
 	}
 
 	template<typename T>
-		requires std::movable<T>&& std::copyable<T>
+	requires (std::movable<T> && std::copyable<T>)
 	inline ComponentStorage<T>& ComponentStorage<T>::operator=(ComponentStorage&& other) noexcept
 	{
 		if (this != &other)
@@ -124,7 +124,7 @@ namespace Flies
 	}
 
 	template<typename T>
-		requires std::movable<T>&& std::copyable<T>
+	requires (std::movable<T> && std::copyable<T>)
 	inline T& ComponentStorage<T>::Insert(EntityID id, const T& component)
 	{
 		if (Contains(id))
@@ -147,7 +147,7 @@ namespace Flies
 	}
 
 	template<typename T>
-		requires std::movable<T>&& std::copyable<T>
+	requires (std::movable<T> && std::copyable<T>)
 	inline T& ComponentStorage<T>::Insert(EntityID id, T&& component)
 	{
 		if (Contains(id))
@@ -170,9 +170,9 @@ namespace Flies
 	}
 
 	template<typename T>
-		requires std::movable<T>&& std::copyable<T>
+	requires (std::movable<T> && std::copyable<T>)
 	template<typename... Args>
-		requires std::constructible_from<T, Args...>
+	requires (std::constructible_from<T, Args...>)
 	inline T& ComponentStorage<T>::Emplace(EntityID id, Args&&... args)
 	{
 		if (Contains(id))
@@ -196,7 +196,7 @@ namespace Flies
 	}
 
 	template<typename T>
-		requires std::movable<T>&& std::copyable<T>
+	requires (std::movable<T> && std::copyable<T>)
 	inline void ComponentStorage<T>::Remove(EntityID id)
 	{
 		if (Contains(id))
@@ -221,14 +221,14 @@ namespace Flies
 	}
 
 	template<typename T>
-		requires std::movable<T>&& std::copyable<T>
+	requires (std::movable<T> && std::copyable<T>)
 	inline bool ComponentStorage<T>::Contains(EntityID id) const
 	{
 		return m_SparseSet.Contains(id);
 	}
 
 	template<typename T>
-		requires std::movable<T>&& std::copyable<T>
+	requires (std::movable<T> && std::copyable<T>)
 	inline T* ComponentStorage<T>::Get(EntityID id)
 	{
 		if (Contains(id))
@@ -239,7 +239,7 @@ namespace Flies
 	}
 
 	template<typename T>
-		requires std::movable<T>&& std::copyable<T>
+	requires (std::movable<T> && std::copyable<T>)
 	inline const T* ComponentStorage<T>::Get(EntityID id) const
 	{
 		if (Contains(id))
@@ -250,7 +250,7 @@ namespace Flies
 	}
 
 	template<typename T>
-		requires std::movable<T>&& std::copyable<T>
+	requires (std::movable<T> && std::copyable<T>)
 	inline void ComponentStorage<T>::Grow()
 	{
 		size_type newCapacity = m_Capacity ? m_Capacity * (size_type)2 : (size_type)20;
@@ -276,12 +276,11 @@ namespace Flies
 	}
 
 	template<typename T>
-		requires std::movable<T>&& std::copyable<T>
+	requires (std::movable<T> && std::copyable<T>)
 	inline void ComponentStorage<T>::Cleanup()
 	{
 		if (m_Capacity > 0)
 		{
-			FLS_ASSERT(m_Storage && m_Dense)
 			Traits<Dense>::deallocate(m_DenseAlloc, m_Dense, m_Capacity);
 
 			for (auto it = m_Storage; it != m_Storage + m_Size; it++)

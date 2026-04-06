@@ -6,19 +6,21 @@
 #include <functional>
 #include <type_traits>
 
-#include <Flies/EntityPool.h>
-#include <Flies/ComponentStorage.h>
-#include <Flies/TypeInfo.h>
+#include "Common/Types.h"
 
-#include <Flies/Common/Types.h>
-#include <Flies/Common/Assert.h>
+#include "EntityPool.h"
+#include "ComponentStorage.h"
+#include "TypeInfo.h"
 
 namespace Flies
 {
-	class World;
-
-	template<typename... Types>
+	template <typename... Types>
+	requires ((!std::is_reference_v<Types> && !std::is_volatile_v<Types>) && ...)
 	class View;
+
+	template <typename... Types>
+	requires ((!std::is_reference_v<Types> && !std::is_volatile_v<Types>) && ...)
+	class ForEachView;
 
 	class World
 	{
@@ -33,53 +35,59 @@ namespace Flies
 
 		bool IsAlive(Entity entity) const;
 
-		template<typename T>
+		template <typename T>
 		T* InsertComponent(Entity entity, const T& component);
 
-		template<typename T>
+		template <typename T>
 		T* InsertComponent(Entity entity, T&& component);
 
-		template<typename T, typename... Args>
+		template <typename T, typename... Args>
 		T* EmplaceComponent(Entity entity, Args&&... args);
 
-		template<typename... Types>
+		template <typename... Types>
 		void RemoveComponents(Entity entity);
 
-		template<typename... Types>
+		template <typename... Types>
 		bool HasComponents(Entity entity);
 
-		template<typename T>
+		template <typename T>
 		T* GetComponent(Entity entity);
 
-		template<typename T>
+		template <typename T>
 		const T* GetComponent(Entity entity) const;
 
-		template<typename... Types>
-		View<Types...> CreateView();
+		template <typename... Types>
+		Flies::View<Types...> GetView();
 
-		template<typename... Types>
-		const View<Types...> CreateView() const;
+		template <typename... Types>
+		const Flies::View<Types...> GetView() const;
 
-		template<typename T>
+		template <typename... Types>
+		Flies::ForEachView<Types...> GetForEachView();
+
+		template <typename... Types>
+		const Flies::ForEachView<Types...> GetForEachView() const;
+
+		template <typename T>
 		void OnInsert(std::function<void(World&, Entity)> fn);
 
-		template<typename T>
+		template <typename T>
 		void OnRemove(std::function<void(World&, Entity)> fn);
 
 	private:
-		template<typename T>
+		template <typename T>
 		void CreateStorage();
 
-		template<typename T>
+		template <typename T>
 		void DestroyStorage();
 
-		template<typename T>
+		template <typename T>
 		bool HasStorage() const;
 
-		template<typename T>
+		template <typename T>
 		ComponentStorage<T>* GetStorage();
 
-		template<typename T>
+		template <typename T>
 		const ComponentStorage<T>* GetStorage() const;
 
 	private:
@@ -92,7 +100,7 @@ namespace Flies
 			std::function<void()> Deleter;
 			std::function<void(EntityID)> Remove;
 			std::function<bool(EntityID)> Contains;
-			std::function<std::span<const EntityID>()> Entities;
+			std::function<Flies::Span<const EntityID>()> Entities;
 			std::function<size_type()> Size;
 
 			std::vector<std::function<void(World&, Entity)>> OnInsert;
@@ -100,11 +108,13 @@ namespace Flies
 		};
 		std::vector<StorageEntry> m_Storages;
 
-		template<typename... Types>
+		template <typename... Types>
+		requires ((!std::is_reference_v<Types> && !std::is_volatile_v<Types>) && ...)
 		friend class View;
 	};
 
-	template<typename... Types>
+	template <typename... Types>
+	requires ((!std::is_reference_v<Types> && !std::is_volatile_v<Types>) && ...)
 	class View
 	{
 	public:
@@ -124,83 +134,89 @@ namespace Flies
 			bool operator!=(const Iterator& other) const { return !(*this == other); }
 
 		private:
+			bool HasAll(EntityID id) const;
 			void SkipInvalid();
 
 		private:
-			View* m_View = nullptr;
+			View& m_View;
 			size_type m_Index = 0;
-		};
 
-		template<typename ViewType, typename... ValueTypes>
-		class ForEachIteratorBase
-		{
-		public:
-			using value_type = std::tuple<EntityID, ValueTypes&...>;
-			using difference_type = std::ptrdiff_t;
-			using iterator_category = std::forward_iterator_tag;
-
-			ForEachIteratorBase(ViewType& view, size_type index = 0);
-
-			value_type operator*() const;
-			ForEachIteratorBase& operator++();
-			ForEachIteratorBase operator++(int);
-
-			bool operator==(const ForEachIteratorBase& other) const { return m_Index == other.m_Index; }
-			bool operator!=(const ForEachIteratorBase& other) const { return !(*this == other); }
-
-		private:
-			void SkipInvalid();
-
-		private:
-			ViewType* m_View = nullptr;
-			size_type m_Index = 0;
-		};
-
-		struct ForEachView
-		{
-			View& view;
-
-			ForEachIteratorBase<View, Types...> begin() { return ForEachIteratorBase<View, Types...>{ view }; }
-			ForEachIteratorBase<const View, const Types...> begin() const { return ForEachIteratorBase<View, Types...>{ view }; }
-			ForEachIteratorBase<const View, const Types...> cbegin() const { return begin(); }
-
-			ForEachIteratorBase<View, Types...> end() { return ForEachIteratorBase<View, Types...>{ view, view.EndIndex() }; }
-			ForEachIteratorBase<const View, const Types...> end() const { return ForEachIteratorBase<View, Types...>{ view, view.EndIndex() }; }
-			ForEachIteratorBase<const View, const Types...> cend() const { return end(); }
+			template<typename... UTypes>
+			requires ((!std::is_reference_v<Types> && !std::is_volatile_v<Types>) && ...)
+			friend class ForEachView;
 		};
 
 	public:
 		View(World& world);
 		~View() = default;
-		
-		ForEachView ForEach() { return ForEachView{ *this }; }
-		const ForEachView ForEach() const { return ForEachView{ *this }; }
 
-		template<typename Func>
-		void ForEach(Func&& func);
-
-		template<typename Func>
-		void ForEach(Func&& func) const;
+		void Each(std::function<void(EntityID)> func) const;
 
 		Iterator begin() { return Iterator(*this, 0); }
-		Iterator begin() const { return Iterator(*this, 0); }
-		Iterator cbegin() const { return begin(); }
+		const Iterator begin() const { return Iterator(*this, 0); }
+		const Iterator cbegin() const { return begin(); }
 
 		Iterator end() { return Iterator(*this, EndIndex()); }
-		Iterator end() const { return Iterator(*this, EndIndex()); }
-		Iterator cend() const { return end(); }
+		const Iterator end() const { return Iterator(*this, EndIndex()); }
+		const Iterator cend() const { return end(); }
 
 	private:
 		size_type EndIndex() const;
-		bool HasAll(EntityID id) const;
-
-		std::tuple<Types&...> GetComponents(EntityID id) const;
 
 	private:
-		World* m_World = nullptr;
+		World& m_World;
 		std::tuple<ComponentStorage<std::remove_cvref_t<Types>>*...> m_Storages = {};
 		World::StorageEntry* m_SmallestStorage = nullptr;
+
+		template<typename... UTypes>
+		requires ((!std::is_reference_v<UTypes> && !std::is_volatile_v<UTypes>) && ...)
+		friend class ForEachView;
+	};
+
+	template <typename... Types>
+	requires ((!std::is_reference_v<Types> && !std::is_volatile_v<Types>) && ...)
+	class ForEachView
+	{
+	public:
+		class Iterator
+		{
+		public:
+			using difference_type = std::ptrdiff_t;
+			using iterator_category = std::forward_iterator_tag;
+
+			Iterator(View<Types...>& view, size_type index);
+			Iterator(const View<Types...>::Iterator& iterator);
+
+			std::tuple<EntityID, Types&...> operator*() const;
+
+			Iterator& operator++();
+			Iterator operator++(int);
+
+			bool operator==(const Iterator& other) const { return m_Iterator == other.m_Iterator; }
+			bool operator!=(const Iterator& other) const { return !(*this == other); }
+
+		private:
+			View<Types...>::Iterator m_Iterator;
+		};
+
+	public:
+		ForEachView(World& world);
+		ForEachView(const View<Types...>& view);
+
+		void Each(std::function<void(EntityID id, Types&...)> func);
+		void Each(std::function<void(EntityID id, const Types&...)> func) const;
+
+		Iterator begin() { return Iterator(m_View.begin()); }
+		Iterator begin() const { return Iterator(m_View.begin()); }
+		Iterator cbegin() const { return begin(); }
+
+		Iterator end() { return Iterator(m_View.end()); }
+		Iterator end() const { return Iterator(m_View.end()); }
+		Iterator cend() const { return end(); }
+
+	private:
+		View<Types...> m_View;
 	};
 }
 
-#include <Flies/World.inl>
+#include "World.inl"
